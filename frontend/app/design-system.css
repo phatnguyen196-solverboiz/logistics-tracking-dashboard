@@ -1,0 +1,735 @@
+/* ============================================================================
+   HẢI LỘ — DESIGN SYSTEM
+   Nền CSS cho dashboard theo dõi vận đơn.
+
+   File này vừa là code chạy được, vừa là bản mô tả thiết kế. Mỗi token đều có
+   lý do đi kèm. Nếu sau này bạn (hoặc một con AI khác) muốn sửa, đọc phần lý do
+   trước — sửa mà không hiểu lý do là cách nhanh nhất để giao diện trôi ngược về
+   trạng thái "template".
+
+   ---------------------------------------------------------------------------
+   PHẦN 0 — TẠI SAO GIAO DIỆN "TRÔNG NHƯ AI LÀM"
+   ---------------------------------------------------------------------------
+   Không phải vì xấu. Phần lớn giao diện AI sinh ra khá sạch. Nó lộ vì nó
+   *không quyết định gì cả*: mọi trục thiết kế đều rơi vào giá trị mặc định,
+   nên màn hình nào cũng giống màn hình nào bất kể sản phẩm là gì.
+
+   Sáu dấu hiệu, kèm cách file này chống lại:
+
+   1. MỘT BÁN KÍNH BO CHO MỌI THỨ
+      Nút bo 16, thẻ bo 16, input bo 16, modal bo 16. Bo góc mất khả năng phân
+      cấp, mọi phần tử nằm cùng một tầng thị giác.
+      → Ở đây: thang bán kính 5 bậc, gắn với *vai trò* của phần tử (§4).
+
+   2. BÓNG ĐỔ RẢI KHẮP NƠI
+      `box-shadow: 0 4px 6px rgba(0,0,0,.1)` dưới từng thẻ. Bóng nghĩa là
+      "vật này nổi lên trên mặt phẳng trang". Nếu mọi thứ đều nổi thì không gì
+      nổi cả, và trang trở nên đục.
+      → Ở đây: đúng 2 loại bóng, chỉ dùng cho lớp phủ thật sự (§5).
+
+   3. MÀU NHẤN LÀM TRANG TRÍ
+      Gradient tím-xanh trong hero, viền gradient, icon nhiều màu. Màu bị tiêu
+      hết vào chỗ không mang thông tin, nên khi cần báo "lô hàng này trễ" thì
+      không còn màu nào đủ mạnh.
+      → Ở đây: màu tín hiệu là tài nguyên khan hiếm, chỉ dùng cho trạng thái (§3).
+
+   4. MỘT FONT, MỘT ĐỘ ĐẬM, MỘT CỠ CHO GẦN NHƯ MỌI THỨ
+      Rồi bù lại bằng cách in hoa toàn bộ nhãn và giãn chữ (`letter-spacing`).
+      All-caps là dấu hiệu rõ nhất.
+      → Ở đây: dùng *trục độ rộng* của font variable làm tương phản chính,
+        không in hoa nhãn (§2).
+
+   5. CHROME LẶP LẠI BẤT KỂ NỘI DUNG
+      Nhãn eyebrow in hoa trên mọi tiêu đề; chuỗi meta nối bằng dấu chấm giữa
+      (`A · B · C`); đánh số `01 / 02 / 03` cho thứ không phải trình tự; mũi tên
+      `→` dán đuôi mọi link.
+      → Ở đây: cấu trúc thị giác phải *mã hoá thông tin*. Không có class nào
+        trong file này tồn tại để trang trí.
+
+   6. CHUYỂN ĐỘNG KHẮP NƠI
+      Mỗi section fade-and-slide-up khi cuộn tới, mỗi thẻ nhấc lên khi hover.
+      → Ở đây: chuyển động chỉ trả lời hành động của người dùng, cộng đúng một
+        khoảnh khắc lúc tải trang (§9).
+
+   DANH SÁCH CẤM — không đưa các giá trị này vào codebase:
+     #6366F1 #8B5CF6 #A855F7   (indigo/violet mặc định của SaaS template)
+     #D97757                    (terracotta — màu accent của Claude, lộ ngay)
+     #F4F1EA                    (nền kem "AI design" đang bão hoà)
+     #0B0B0B #111111            (đen giả; dùng --n900 có sắc độ thật)
+     rgba(0,0,0,.1) box-shadow  (bóng mặc định của Tailwind/Bootstrap)
+     backdrop-filter: blur()    (glassmorphism, trừ khi có lý do rõ ràng)
+     linear-gradient(...) làm nền panel
+     text-transform: uppercase trên nhãn UI
+
+   ---------------------------------------------------------------------------
+   PHẦN 1 — NGUYÊN TẮC GỐC
+   ---------------------------------------------------------------------------
+   a. Bố cục do TRUNG TÍNH gánh. Xám và đường kẻ dựng nên trang; màu chỉ xuất
+      hiện khi có chuyện cần báo.
+   b. Mỗi màn hình được phép TO TIẾNG ĐÚNG MỘT LẦN. Ở dashboard này, chỗ to
+      tiếng là bảng tiến độ chuyến. Mọi thứ còn lại phải im.
+   c. ĐƯỜNG KẺ MANG NGHĨA. 1px ngang = ngăn hai hàng cùng cấp. 2px dọc bên trái
+      = trạng thái. Không viền = cùng một mặt phẳng. Không kẻ cho đẹp.
+   d. MẬT ĐỘ LÀ TÍNH NĂNG. Đây là màn hình điều độ, người ta nhìn nó 8 tiếng
+      mỗi ngày. Khoảng trắng rộng rãi kiểu landing page ở đây là phản tác dụng.
+   e. SỐ PHẢI SO SÁNH ĐƯỢC. `tabular-nums` bật mặc định, căn phải, cùng số
+      chữ số thập phân trong một cột.
+============================================================================ */
+
+
+/* ============================================================================
+   PHẦN 2 — CHỮ
+   ----------------------------------------------------------------------------
+   Một họ chữ duy nhất: Archivo (variable, có trục wght 100–900 và wdth 62–125).
+   Lý do chọn: grotesque công nghiệp, gốc từ chữ biển báo — đúng ngôn ngữ của
+   cảng, kho, container. Số của nó có chiều cao đều và mở, đọc tốt ở 12px.
+
+   Điểm mấu chốt: tương phản KHÔNG đến từ việc ghép font thứ hai, mà đến từ
+   TRỤC ĐỘ RỘNG. Nhãn bảng dùng bản hẹp (wdth 82) để nhét được nhiều cột; tiêu
+   đề dùng bản rộng (wdth 112) để có sức nặng. Cùng một họ chữ nên trang vẫn
+   thống nhất, nhưng không phẳng. Đây là quyết định riêng cho dự án này, không
+   phải mặc định.
+
+   Nếu không tải được font variable, fallback phải là một grotesque thật
+   (Helvetica Neue / Arial), KHÔNG rơi về system-ui — system-ui trên Windows là
+   Segoe UI, sẽ phá vỡ nhịp chữ.
+============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&display=swap');
+
+:root {
+  --font-ui: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Trục độ rộng — dùng qua font-variation-settings, không dùng font-stretch
+     (font-stretch bị một số engine làm tròn về giá trị gần nhất). */
+  --wdth-tight: 82;   /* nhãn bảng, chip, cột hẹp */
+  --wdth-norm:  100;  /* văn bản thường */
+  --wdth-wide:  112;  /* tiêu đề, số lớn */
+
+  /* Thang cỡ chữ. Cơ sở 14px vì đây là màn hình mật độ cao, không phải trang
+     marketing. Tỉ lệ ~1.22 (quãng ba thứ), làm tròn về pixel nguyên để nét
+     chữ không bị nhoè trên màn hình thường. */
+  --fs-micro: 11px;   /* chú thích trục, đơn vị */
+  --fs-mini:  12px;   /* nhãn phụ, meta */
+  --fs-sm:    13px;   /* ô bảng */
+  --fs-base:  14px;   /* văn bản giao diện */
+  --fs-md:    16px;   /* tiêu đề panel */
+  --fs-lg:    19px;   /* tiêu đề khu vực */
+  --fs-xl:    24px;
+  --fs-2xl:   31px;   /* số liệu lớn duy nhất trên màn hình */
+
+  /* Chiều cao dòng: chữ càng lớn càng chặt. Dòng 1.5 cho tiêu đề 31px là lỗi
+     điển hình khiến tiêu đề trông rời rạc. */
+  --lh-tight: 1.15;
+  --lh-snug:  1.3;
+  --lh-body:  1.5;
+
+  --ls-tight: -0.012em;  /* áp cho cỡ >= 19px, bù khoảng hở tự nhiên */
+  --ls-norm:  0;
+  /* Không có --ls-wide. Giãn chữ cho nhãn nhỏ là dấu hiệu AI. */
+}
+
+
+/* ============================================================================
+   PHẦN 3 — MÀU
+   ----------------------------------------------------------------------------
+   Hai nhóm tách bạch, và ranh giới giữa chúng là thứ giữ cho giao diện không
+   biến thành template:
+
+   TRUNG TÍNH (--n*) dựng toàn bộ bố cục. Thang xám này ngả xanh lá rất nhẹ
+   (hue ~150, sat ~4%) thay vì xám trung tính tuyệt đối. Xám thuần trông như
+   chưa ai đụng vào; một chút sắc độ khiến màn hình có nhiệt độ riêng. Sắc độ
+   này lấy từ nước cảng và bạt container — tức là từ chính chủ đề.
+
+   TÍN HIỆU (--go / --hold / --alarm) chỉ nói về TRẠNG THÁI LÔ HÀNG. Không
+   dùng cho nút, không dùng cho link, không dùng cho icon trang trí. Quy tắc:
+   nếu bạn xoá màu đi mà không mất thông tin nào, thì chỗ đó không được phép
+   có màu.
+
+   --sea là màu cấu trúc: thanh chặng biển, tiêu đề bảng, trạng thái focus.
+   Nó đủ tối để làm việc như mực màu, nên nó không cạnh tranh với màu tín hiệu.
+
+   Kiểm tra tương phản: mọi cặp chữ/nền dưới đây đạt tối thiểu 4.5:1
+   (7:1 cho --n700 trên --n100).
+============================================================================ */
+
+:root {
+  color-scheme: light dark;
+
+  /* — Trung tính, sáng → tối — */
+  --n0:   #FBFBF8;  /* mặt nổi cao nhất: drawer, dropdown */
+  --n50:  #F6F6F2;  /* panel */
+  --n100: #EDEDE7;  /* nền trang */
+  --n150: #E3E4DD;  /* nền vùng bảng tiến độ (lõm xuống một bậc) */
+  --n200: #D9DAD2;  /* nền chip, hàng bảng khi hover */
+  --n300: #CDCFC6;  /* đường kẻ chính */
+  --n400: #AFB2A8;  /* đường kẻ phụ, chữ bị vô hiệu hoá */
+  --n500: #8B8F86;  /* icon phụ */
+  --n600: #636B64;  /* chữ phụ */
+  --n700: #454C47;  /* chữ thường */
+  --n900: #191D1A;  /* chữ chính — đen ngả xanh, không phải #111 */
+
+  /* — Cấu trúc — */
+  --sea-700: #123B48;
+  --sea-600: #1C4C5B;  /* chính */
+  --sea-500: #2A6577;
+  --sea-100: #CFE3E8;
+  --sea-50:  #E7F0F2;
+
+  /* — Tín hiệu: đúng lịch / cần theo dõi / sự cố — */
+  --go:       #2C6E4E;
+  --go-bg:    #DCE9E0;
+  --hold:     #B5751B;
+  --hold-bg:  #F2E6D0;
+  --alarm:    #A8322A;
+  --alarm-bg: #F1DCD9;
+
+  /* — Vai trò ngữ nghĩa. Component chỉ được dùng các biến ở khối này,
+       không gọi thẳng --n300 hay --sea-600. Nhờ vậy đổi theme là đổi một chỗ. */
+  --bg-page:     var(--n100);
+  --bg-panel:    var(--n50);
+  --bg-sunken:   var(--n150);
+  --bg-float:    var(--n0);
+  --bg-hover:    var(--n200);
+
+  --fg:          var(--n900);
+  --fg-muted:    var(--n600);
+  --fg-faint:    var(--n500);
+  --fg-onsea:    #F2F6F6;
+
+  --rule:        var(--n300);
+  --rule-soft:   var(--n200);
+  --rule-strong: var(--n400);
+
+  --focus-ring:  var(--sea-600);
+}
+
+/* Chế độ tối. Không phải đảo ngược thang xám — mắt cảm nhận độ tương phản khác
+   nhau trên nền tối, nên chữ chính hạ xuống khỏi trắng tinh (#E6E9E3) để giảm
+   quầng sáng, và màu tín hiệu được kéo sáng + giảm bão hoà để không rung. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --n0:   #1F2723;
+    --n50:  #171D1A;
+    --n100: #101513;
+    --n150: #1C2320;
+    --n200: #262E2A;
+    --n300: #333C37;
+    --n400: #4A544E;
+    --n500: #6E7972;
+    --n600: #8D978E;
+    --n700: #B4BCB5;
+    --n900: #E6E9E3;
+
+    --sea-700: #9CCBD8;
+    --sea-600: #6FB3C4;
+    --sea-500: #4E93A6;
+    --sea-100: #204A57;
+    --sea-50:  #18343D;
+
+    --go:       #6BBE8E;
+    --go-bg:    #1B3227;
+    --hold:     #E0A44E;
+    --hold-bg:  #35291440;
+    --alarm:    #E4776C;
+    --alarm-bg: #3A1F1C;
+
+    --fg-onsea: #0E1614;
+  }
+}
+:root[data-theme="dark"] {
+  --n0:#1F2723; --n50:#171D1A; --n100:#101513; --n150:#1C2320; --n200:#262E2A;
+  --n300:#333C37; --n400:#4A544E; --n500:#6E7972; --n600:#8D978E; --n700:#B4BCB5;
+  --n900:#E6E9E3;
+  --sea-700:#9CCBD8; --sea-600:#6FB3C4; --sea-500:#4E93A6;
+  --sea-100:#204A57; --sea-50:#18343D;
+  --go:#6BBE8E; --go-bg:#1B3227; --hold:#E0A44E; --hold-bg:#332714;
+  --alarm:#E4776C; --alarm-bg:#3A1F1C; --fg-onsea:#0E1614;
+}
+
+
+/* ============================================================================
+   PHẦN 4 — KHÔNG GIAN & BÁN KÍNH
+   ----------------------------------------------------------------------------
+   Thang khoảng cách cơ sở 4px, nhưng KHÔNG phải cấp số nhân đều. Các bậc nhỏ
+   dày hơn vì giao diện mật độ cao sống ở vùng 4–16px; các bậc lớn thưa dần vì
+   khoảng cách 40 và 44 không ai phân biệt được.
+
+   BÁN KÍNH — đây là chỗ giao diện AI lộ rõ nhất, nên quy tắc phải cứng:
+     0px  đường kẻ, ô bảng, thanh tiến độ ngang  → vật nằm phẳng trên trang
+     2px  chip, input, ô nhỏ                     → vật bấm được, cỡ nhỏ
+     4px  nút, badge trạng thái                  → vật bấm được, cỡ vừa
+     6px  panel, card                            → vùng nội dung
+     10px drawer, dropdown, dialog               → vật nổi thật sự
+   Bán kính tăng theo *độ nổi*, không theo sở thích.
+
+   QUY TẮC BÁN KÍNH LỒNG NHAU: bán kính trong = bán kính ngoài − padding.
+   Panel bo 6 với padding 4 thì phần tử con bo 2. Bỏ qua quy tắc này là lý do
+   nhiều giao diện có góc trông "lệch" mà không ai chỉ ra được tại sao.
+============================================================================ */
+
+:root {
+  --sp-1:  2px;
+  --sp-2:  4px;
+  --sp-3:  6px;
+  --sp-4:  8px;
+  --sp-5:  12px;
+  --sp-6:  16px;
+  --sp-7:  20px;
+  --sp-8:  24px;
+  --sp-9:  32px;
+  --sp-10: 44px;
+  --sp-11: 64px;
+
+  --r-flat:  0px;
+  --r-xs:    2px;
+  --r-sm:    4px;
+  --r-md:    6px;
+  --r-float: 10px;
+
+  --bw: 1px;              /* mọi đường kẻ là 1px. Không có 1.5px, không 2px
+                             trừ viền trạng thái bên trái (§7). */
+  --track-h: 10px;        /* chiều cao thanh chặng trong bảng tiến độ */
+  --row-h: 58px;
+}
+
+
+/* ============================================================================
+   PHẦN 5 — ĐỘ NỔI
+   ----------------------------------------------------------------------------
+   Đúng hai loại bóng trong toàn hệ thống. Card KHÔNG có bóng — card được tách
+   khỏi nền bằng chênh lệch màu nền (--bg-panel trên --bg-page) và một đường kẻ.
+   Đó là cách phân tầng rẻ hơn và sạch hơn.
+
+   Bóng ở đây có hai lớp: một lớp tiếp xúc rất sát và tối (vật chạm mặt phẳng),
+   một lớp toả rộng và rất nhạt (ánh sáng môi trường). Bóng một lớp luôn trông
+   như CSS mặc định.
+============================================================================ */
+
+:root {
+  --shadow-pop:
+    0 1px 1px rgba(16, 26, 22, .10),
+    0 8px 24px -6px rgba(16, 26, 22, .18);
+  --shadow-drag:
+    0 2px 2px rgba(16, 26, 22, .14),
+    0 18px 40px -10px rgba(16, 26, 22, .26);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --shadow-pop:  0 1px 1px rgba(0,0,0,.5), 0 8px 24px -6px rgba(0,0,0,.6);
+    --shadow-drag: 0 2px 2px rgba(0,0,0,.55), 0 18px 40px -10px rgba(0,0,0,.7);
+  }
+}
+
+
+/* ============================================================================
+   PHẦN 6 — RESET & NỀN TẢNG
+============================================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  font-variation-settings: 'wdth' var(--wdth-norm), 'wght' 400;
+  /* Số trong toàn app phải xếp cột được. Đây là dashboard số liệu, không phải
+     blog — mặc định tabular là đúng, chỗ nào cần chữ số tỉ lệ thì tắt riêng. */
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, p, figure { margin: 0; }
+
+h1, h2, h3 {
+  font-variation-settings: 'wdth' var(--wdth-wide), 'wght' 620;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+}
+h1 { font-size: var(--fs-xl); }
+h2 { font-size: var(--fs-lg); }
+h3 { font-size: var(--fs-md); letter-spacing: var(--ls-norm); }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+img, svg { display: block; max-width: 100%; }
+
+/* Focus: một vòng duy nhất, luôn nhìn thấy được, không bao giờ outline:none.
+   Dùng :focus-visible để chuột không kích hoạt vòng focus. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+
+/* ============================================================================
+   PHẦN 7 — CÁC THÀNH PHẦN CƠ BẢN
+   ----------------------------------------------------------------------------
+   Mỗi class dưới đây tồn tại vì nó mã hoá một thông tin. Nếu bạn định thêm
+   class mới, câu hỏi kiểm tra là: "xoá nó đi thì người dùng mất thông tin gì?"
+   Không trả lời được thì đừng thêm.
+============================================================================ */
+
+/* — Mặt phẳng ————————————————————————————————————————————————— */
+/* Panel không có bóng. Nó nổi lên nhờ nền sáng hơn nền trang một bậc. */
+.surface {
+  background: var(--bg-panel);
+  border: var(--bw) solid var(--rule-soft);
+  border-radius: var(--r-md);
+}
+/* Vùng lõm: dùng cho bảng tiến độ và biểu đồ. Nền tối hơn trang một bậc khiến
+   thanh màu bên trong nổi lên mà không cần viền quanh từng thanh. */
+.surface--sunken {
+  background: var(--bg-sunken);
+  border-color: var(--rule);
+}
+.surface--float {
+  background: var(--bg-float);
+  border-radius: var(--r-float);
+  box-shadow: var(--shadow-pop);
+  border-color: transparent;
+}
+
+/* Đầu panel: tách bằng đường kẻ, không bằng khoảng trống. Trong giao diện mật
+   độ cao, đường kẻ tốn 1px còn khoảng trống tốn 24px. */
+.surface__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
+  border-bottom: var(--bw) solid var(--rule-soft);
+}
+.surface__body { padding: var(--sp-6); }
+.surface--sunken .surface__body { padding: var(--sp-5) var(--sp-6) var(--sp-7); }
+
+/* — Nhãn ——————————————————————————————————————————————————— */
+/* KHÔNG in hoa. Phân biệt bằng cỡ, sắc độ và độ rộng chữ. */
+.label {
+  font-size: var(--fs-mini);
+  font-variation-settings: 'wdth' var(--wdth-tight), 'wght' 560;
+  color: var(--fg-muted);
+  line-height: var(--lh-snug);
+}
+.value-hero {
+  font-size: var(--fs-2xl);
+  font-variation-settings: 'wdth' var(--wdth-wide), 'wght' 680;
+  line-height: 1;
+  letter-spacing: var(--ls-tight);
+  /* Số lớn phải căn theo mép chữ số, không theo hộp. -0.04em bù phần đệm
+     trên của font. */
+  margin-top: -0.04em;
+}
+
+/* — Chấm trạng thái ————————————————————————————————————————— */
+/* Màu KHÔNG được là kênh thông tin duy nhất: mỗi trạng thái có hình dạng riêng
+   (tròn đặc / vành rỗng / vuông) để người mù màu vẫn phân biệt được. */
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--fg-faint);
+}
+.dot--go    { background: var(--go); }
+.dot--hold  { background: transparent; border: 2px solid var(--hold); }
+.dot--alarm { background: var(--alarm); border-radius: var(--r-flat); }
+
+/* — Chip / badge trạng thái ——————————————————————————————————— */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 2px var(--sp-4);
+  font-size: var(--fs-mini);
+  font-variation-settings: 'wdth' var(--wdth-tight), 'wght' 560;
+  line-height: 18px;
+  border-radius: var(--r-sm);
+  background: var(--bg-hover);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+.chip--go    { background: var(--go-bg);    color: var(--go); }
+.chip--hold  { background: var(--hold-bg);  color: var(--hold); }
+.chip--alarm { background: var(--alarm-bg); color: var(--alarm); }
+
+/* — Nút ————————————————————————————————————————————————————— */
+/* Ba mức, và chỉ được có MỘT nút .btn--primary trong một vùng nhìn thấy.
+   Nhãn nút nói đúng việc sẽ xảy ra: "Lưu thay đổi", không phải "Gửi".
+   Không gắn mũi tên → vào nhãn nút. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: 30px;
+  padding: 0 var(--sp-5);
+  border-radius: var(--r-sm);
+  border: var(--bw) solid var(--rule);
+  background: var(--bg-panel);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+  font-variation-settings: 'wdth' 92, 'wght' 560;
+  cursor: pointer;
+  transition: background 90ms linear, border-color 90ms linear;
+}
+.btn:hover  { background: var(--bg-hover); }
+.btn:active { background: var(--rule-soft); }
+.btn--primary {
+  background: var(--sea-600);
+  border-color: var(--sea-600);
+  color: var(--fg-onsea);
+}
+.btn--primary:hover { background: var(--sea-700); border-color: var(--sea-700); }
+.btn--quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--fg-muted);
+  padding-inline: var(--sp-4);
+}
+.btn--quiet:hover { background: var(--bg-hover); color: var(--fg); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+/* — Ô nhập ——————————————————————————————————————————————————— */
+.field {
+  height: 30px;
+  padding: 0 var(--sp-4);
+  background: var(--bg-page);
+  border: var(--bw) solid var(--rule);
+  border-radius: var(--r-xs);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+}
+.field::placeholder { color: var(--fg-faint); }
+.field:focus-visible { border-color: var(--sea-600); }
+
+/* — Bảng dữ liệu ————————————————————————————————————————————— */
+/* Bảng KHÔNG có viền dọc và KHÔNG tô màu xen kẽ hàng. Cả hai đều là cách bù
+   cho việc căn cột kém. Căn cột đúng thì mắt tự lần được hàng. */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-panel);
+  text-align: left;
+  font-variation-settings: 'wdth' var(--wdth-tight), 'wght' 600;
+  color: var(--fg-muted);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: var(--bw) solid var(--rule);
+  white-space: nowrap;
+}
+.table tbody td {
+  padding: var(--sp-5);
+  border-bottom: var(--bw) solid var(--rule-soft);
+  vertical-align: baseline;   /* baseline, không phải middle — chữ nhiều dòng
+                                 trong một hàng sẽ tự khớp chân chữ với nhau */
+}
+.table tbody tr:hover td { background: var(--bg-hover); }
+.table tbody tr:last-child td { border-bottom: 0; }
+
+/* Cột số: căn phải, cùng số chữ số thập phân. */
+.td-num { text-align: right; font-variation-settings: 'wdth' 94, 'wght' 520; }
+/* Cột mã (vận đơn, container): giữ nguyên chữ hoa của dữ liệu, không ép
+   uppercase bằng CSS — chữ hoa ở đây là thuộc tính của dữ liệu, không phải
+   của kiểu chữ. */
+.td-code { font-variation-settings: 'wdth' 88, 'wght' 560; letter-spacing: .01em; }
+
+/* Viền trạng thái bên trái — chỗ duy nhất được dùng viền 2px, vì nó mang
+   thông tin chứ không phân tách. */
+.row-flag { box-shadow: inset 2px 0 0 0 transparent; }
+.row-flag--hold  { box-shadow: inset 2px 0 0 0 var(--hold); }
+.row-flag--alarm { box-shadow: inset 2px 0 0 0 var(--alarm); }
+
+/* — Thanh chặng trong bảng tiến độ ————————————————————————————— */
+/* Đây là phần "to tiếng" duy nhất của màn hình. Mọi ngân sách thị giác đổ vào
+   đây, nên các phần khác phải nhạt đi. */
+.track { position: relative; height: var(--row-h); }
+.seg {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  height: var(--track-h);
+  border-radius: var(--r-flat);   /* thanh thời gian phải vuông đầu: đầu bo
+                                     tròn làm mờ điểm bắt đầu/kết thúc, mà đó
+                                     chính là dữ liệu */
+}
+.seg--sea  { background: var(--sea-600); }
+.seg--air  { background: var(--sea-500); }
+.seg--road { background: var(--n500); }
+/* Nằm bãi / chờ thông quan: gạch sọc dọc, vì đây là thời gian KHÔNG di chuyển.
+   Kết cấu khác nhau nói được điều mà sắc độ khác nhau không nói được. */
+.seg--dwell {
+  background: repeating-linear-gradient(
+    90deg, var(--rule-strong) 0 2px, transparent 2px 5px);
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+/* Phần trễ so với ETA hợp đồng: sọc chéo đỏ. Đây là màu tín hiệu được tiêu
+   đúng chỗ. */
+.seg--late {
+  background: repeating-linear-gradient(
+    45deg, var(--alarm) 0 2px, transparent 2px 6px);
+  box-shadow: inset 0 -2px 0 0 var(--alarm);
+}
+
+/* Vạch "hôm nay" và màn phủ quá khứ: vẽ MỘT lần cho cả bảng, không lặp trên
+   từng hàng. */
+.axis-now {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--alarm);
+  pointer-events: none;
+}
+.axis-past {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  background: color-mix(in srgb, var(--bg-sunken) 62%, transparent);
+  pointer-events: none;
+}
+.axis-grid {
+  position: absolute; inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg, var(--rule) 0 1px, transparent 1px var(--axis-step, 8.333%));
+  opacity: .5;
+  pointer-events: none;
+}
+
+/* — Trạng thái rỗng và lỗi ——————————————————————————————————— */
+/* Màn hình rỗng là lời mời hành động, không phải chỗ để đặt hình minh hoạ.
+   Thông báo lỗi nói rõ chuyện gì xảy ra và sửa thế nào, không xin lỗi. */
+.empty {
+  padding: var(--sp-9) var(--sp-6);
+  text-align: left;
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+  max-width: 46ch;
+}
+.empty > strong {
+  display: block;
+  color: var(--fg);
+  font-variation-settings: 'wdth' var(--wdth-norm), 'wght' 600;
+  margin-bottom: var(--sp-3);
+}
+
+/* — Chỉ báo độ tươi dữ liệu ————————————————————————————————— */
+/* Bắt buộc với dashboard thời gian thực: một bản tin GPS 10 phút trước không
+   bao giờ được trông giống dữ liệu sống. */
+.freshness { display: inline-flex; align-items: center; gap: var(--sp-3);
+             font-size: var(--fs-mini); color: var(--fg-muted); }
+.freshness--stale { color: var(--hold); }
+.freshness--dead  { color: var(--alarm); }
+
+
+/* ============================================================================
+   PHẦN 8 — BỐ CỤC
+   ----------------------------------------------------------------------------
+   Độ dài dòng chữ dưới 80 ký tự, và với văn bản trong panel là 60–68ch.
+   Dashboard thì chia theo cột chức năng, không chia theo tỉ lệ đẹp mắt:
+   cột trái là điều hướng cố định (không co), phần còn lại co giãn.
+============================================================================ */
+
+.shell {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.prose { max-width: 66ch; }
+
+/* Điểm ngắt đặt theo lúc NỘI DUNG vỡ, không theo tên thiết bị. Ở dưới 900px
+   bảng tiến độ không còn đủ chỗ cho cả nhãn lẫn trục, nên rail thu về trên. */
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  :root { --row-h: 52px; }
+  /* Bảng tiến độ cuộn ngang thay vì bóp trục — bóp trục là làm sai dữ liệu. */
+  .track-scroll { overflow-x: auto; }
+  .track-scroll > * { min-width: 720px; }
+}
+
+
+/* ============================================================================
+   PHẦN 9 — CHUYỂN ĐỘNG
+   ----------------------------------------------------------------------------
+   Quy tắc: chuyển động chỉ để cho thấy CÁI GÌ VỪA THAY ĐỔI.
+     - Phản hồi thao tác (mở drawer, đổi bộ lọc): 90–180ms.
+     - Đúng một khoảnh khắc lúc tải trang: các thanh chặng vẽ ra từ trái sang.
+       Lệch pha 22ms/hàng, tổng dưới 400ms. Sau đó không còn animation nào tự
+       chạy nữa.
+   Không có fade-and-slide-up khi cuộn. Không có hover nhấc thẻ lên.
+   Easing: ease-out cho vật xuất hiện, ease-in cho vật biến mất. Không dùng
+   cubic-bezier nảy — dữ liệu vận đơn không nên nảy.
+============================================================================ */
+
+:root {
+  --dur-fast: 90ms;
+  --dur-base: 150ms;
+  --dur-slow: 240ms;
+  --ease-out: cubic-bezier(.22, .61, .36, 1);
+  --ease-in:  cubic-bezier(.55, .06, .68, .19);
+}
+
+@keyframes draw-seg { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.seg--animate {
+  transform-origin: left center;
+  animation: draw-seg 380ms var(--ease-out) both;
+  animation-delay: calc(var(--row-index, 0) * 22ms);
+}
+
+.drawer {
+  transition: translate var(--dur-slow) var(--ease-out);
+  translate: 100% 0;
+}
+.drawer[data-open="true"] { translate: 0 0; }
+
+/* Tôn trọng tuyệt đối. Không chỉ rút ngắn thời lượng — tắt hẳn. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* ============================================================================
+   PHẦN 10 — IN
+   ----------------------------------------------------------------------------
+   Người điều độ in bảng kê ra mang xuống kho. Nếu không xử lý, bản in sẽ ra
+   giấy xám kín mực.
+============================================================================ */
+
+@media print {
+  :root { --bg-page: #fff; --bg-panel: #fff; --bg-sunken: #fff; --fg: #000; }
+  .surface { border-color: #999; border-radius: 0; }
+  .surface--float, .drawer, .btn { display: none !important; }
+  .table thead th { position: static; }
+  .table tbody tr { break-inside: avoid; }
+}
+
+
+/* ============================================================================
+   PHẦN 11 — CHECKLIST TRƯỚC KHI MERGE
+   ----------------------------------------------------------------------------
+   [ ] Có đúng một phần tử "to tiếng" trên màn hình không? Nếu có hai, bỏ một.
+   [ ] Có màu nào xuất hiện mà không mang thông tin trạng thái không?
+   [ ] Có bán kính bo nào không nằm trong thang 0/2/4/6/10 không?
+   [ ] Có box-shadow nào ngoài hai biến đã khai báo không?
+   [ ] Có text-transform: uppercase nào không?
+   [ ] Có chuỗi meta nối bằng dấu chấm giữa không?
+   [ ] Có đánh số 01/02/03 cho thứ không phải trình tự không?
+   [ ] Có mũi tên → dán đuôi nhãn nút hay link không?
+   [ ] Tab được hết bằng bàn phím, vòng focus luôn thấy rõ?
+   [ ] prefers-reduced-motion và prefers-color-scheme đều đúng?
+   [ ] Số trong cùng một cột có xếp thẳng hàng không?
+   [ ] Thử ở 360px: có chỗ nào tràn ngang không?
+   [ ] Cuối cùng, theo lời Chanel: nhìn lại màn hình và bỏ đi một thứ.
+============================================================================ */
+

@@ -11,20 +11,26 @@ export default function Dashboard() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [trackingId, setTrackingId] = useState<number | null>(null);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (background = false) => {
     try {
+      if (background) setRefreshing(true);
+      else setLoading(true);
       setError("");
       setShipments(await api.listShipments());
+      setLastRefreshedAt(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load shipments");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load(false); }, [load]);
 
   const stats = useMemo(() => ({
     total: shipments.length,
@@ -38,7 +44,7 @@ export default function Dashboard() {
     setError("");
     try {
       await api.trackShipment(shipment.id);
-      await load();
+      await load(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Tracking failed");
     } finally {
@@ -50,11 +56,14 @@ export default function Dashboard() {
     <>
       <section className="hero-row">
         <div>
-          <p className="eyebrow">OPERATIONS OVERVIEW</p>
+          <p className="eyebrow">Operations overview</p>
           <h1>Shipment command center</h1>
           <p className="subtle">Track every handoff from one calm, reliable workspace.</p>
         </div>
-        <button className="secondary" onClick={() => void load()}>Refresh data</button>
+        <div className="hero-tools">
+          <button className="secondary" disabled={refreshing} onClick={() => void load(true)}>{refreshing ? "Refreshing…" : "Refresh data"}</button>
+          {lastRefreshedAt && <span className="freshness" aria-live="polite"><span className="dot dot--go" />Updated {lastRefreshedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
+        </div>
       </section>
 
       <section className="stats-grid">

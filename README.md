@@ -77,6 +77,7 @@ Serve `mock-carrier/` on port 8081 (for example with Nginx or `python -m http.se
 | `CORS_ALLOWED_ORIGINS` | Frontend origins | `http://localhost:3000` |
 | `MOCK_CARRIER_URL` | Demo Express address used by Selenium | `http://localhost:8081` |
 | `CHROME_BINARY` | Optional Chromium executable | Selenium discovery |
+| `CHROMEDRIVER_PATH` | Optional local ChromeDriver executable | Selenium discovery |
 | `NEXT_PUBLIC_API_URL` | Browser-facing API URL | `http://localhost:8000/api` |
 
 Never commit production secrets. `.env` is ignored; `.env.example` contains only safe placeholders.

@@ -2,6 +2,21 @@ import type { AutomationJob, Shipment, TrackingEvent } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
+function errorMessage(payload: unknown, fallback: string): string {
+  if (!payload || typeof payload !== "object") return fallback;
+  const data = payload as Record<string, unknown>;
+  if (typeof data.detail === "string") return data.detail;
+  if (typeof data.error_message === "string") return data.error_message;
+  for (const [field, value] of Object.entries(data)) {
+    const message = Array.isArray(value) ? value[0] : value;
+    if (typeof message === "string") {
+      const label = field.replaceAll("_", " ");
+      return `${label.charAt(0).toUpperCase()}${label.slice(1)}: ${message}`;
+    }
+  }
+  return fallback;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
@@ -9,8 +24,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     cache: "no-store",
   });
   if (!response.ok) {
-    const detail = await response.json().catch(() => ({}));
-    throw new Error(detail.error_message || detail.detail || JSON.stringify(detail) || "Request failed");
+    const detail: unknown = await response.json().catch(() => null);
+    throw new Error(errorMessage(detail, `Request failed (${response.status})`));
   }
   return response.json() as Promise<T>;
 }

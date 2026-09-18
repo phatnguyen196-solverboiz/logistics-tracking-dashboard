@@ -15,6 +15,11 @@ class ShipmentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def track(self, request, pk=None):
         shipment = self.get_object()
+        if shipment.jobs.filter(status=AutomationJob.Status.RUNNING).exists():
+            return Response(
+                {"detail": "Tracking is already running for this shipment."},
+                status=status.HTTP_409_CONFLICT,
+            )
         job = TrackingService().track_shipment(shipment)
         response_status = status.HTTP_200_OK if job.status == AutomationJob.Status.SUCCESS else status.HTTP_502_BAD_GATEWAY
         return Response(AutomationJobSerializer(job).data, status=response_status)

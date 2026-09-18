@@ -87,7 +87,18 @@ def test_failed_tracking_job(api_client: APIClient, shipment: Shipment, monkeypa
     response = api_client.post(reverse("shipment-track", args=[shipment.pk]))
     assert response.status_code == 502
     assert response.data["status"] == AutomationJob.Status.FAILED
-    assert "attempt 3" in response.data["error_message"]
+    assert response.data["error_message"] == "VN000001 not found"
+
+
+@pytest.mark.django_db
+def test_track_rejects_duplicate_running_job(api_client: APIClient, shipment: Shipment) -> None:
+    AutomationJob.objects.create(
+        shipment=shipment,
+        status=AutomationJob.Status.RUNNING,
+    )
+    response = api_client.post(reverse("shipment-track", args=[shipment.pk]))
+    assert response.status_code == 409
+    assert "already running" in response.data["detail"]
 
 
 @pytest.mark.django_db

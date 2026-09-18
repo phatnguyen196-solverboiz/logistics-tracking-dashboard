@@ -3,7 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RoutePulse Logistics",
+  title: "Hải Lộ Logistics",
   description: "Automated shipment tracking dashboard",
 };
 
@@ -13,12 +13,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <header className="topbar">
           <Link className="brand" href="/">
-            <span className="brand-mark">RP</span>
-            <span>RoutePulse</span>
+            <span className="brand-mark">HL</span>
+            <span>Hải Lộ</span>
           </Link>
           <nav>
             <Link href="/">Dashboard</Link>
-            <Link className="primary-link" href="/shipments/new">+ Add shipment</Link>
+            <Link className="primary-link" href="/shipments/new">Add shipment</Link>
           </nav>
         </header>
         <main className="page-shell">{children}</main>

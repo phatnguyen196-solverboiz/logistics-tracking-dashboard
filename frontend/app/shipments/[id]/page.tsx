@@ -16,6 +16,7 @@ export default function ShipmentDetailPage() {
 
   const load = useCallback(async () => {
     try {
+      setError("");
       const [shipmentData, eventData] = await Promise.all([api.getShipment(params.id), api.getEvents(params.id)]);
       setShipment(shipmentData);
       setEvents(eventData);
@@ -41,7 +42,7 @@ export default function ShipmentDetailPage() {
       <Link className="back-link" href="/">← Back to dashboard</Link>
       {error && <div className="alert error">{error}</div>}
       <section className="detail-hero">
-        <div><p className="eyebrow">DEMO EXPRESS</p><h1>{shipment.tracking_number}</h1><StatusBadge status={shipment.current_status} /></div>
+        <div><p className="eyebrow">Demo Express</p><h1>{shipment.tracking_number}</h1><StatusBadge status={shipment.current_status} /></div>
         <button className="button" onClick={() => void track()} disabled={tracking}>{tracking ? "Tracking…" : "Run tracking"}</button>
       </section>
       <section className="detail-grid">

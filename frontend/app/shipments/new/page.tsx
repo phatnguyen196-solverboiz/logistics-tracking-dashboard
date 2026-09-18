@@ -29,7 +29,7 @@ export default function AddShipmentPage() {
     <section className="form-page">
       <Link className="back-link" href="/">← Back to dashboard</Link>
       <div className="form-card">
-        <p className="eyebrow">NEW SHIPMENT</p>
+        <p className="eyebrow">New shipment</p>
         <h1>Add a tracking number</h1>
         <p className="subtle">Demo Express supports VN000001, VN000002, and VN000003.</p>
         {error && <div className="alert error">{error}</div>}
