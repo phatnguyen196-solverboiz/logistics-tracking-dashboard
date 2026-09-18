@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo Express Tracking</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f2f5fb;font:16px system-ui;color:#14213d}.card{width:min(520px,calc(100% - 32px));background:white;padding:36px;border-radius:20px;box-shadow:0 18px 60px #1725541a}.logo{font-weight:900;letter-spacing:.15em;color:#3157d5}h1{font-size:30px;margin:10px 0 8px}.muted{color:#667085;margin-bottom:24px}label{font-size:13px;font-weight:750}input{width:100%;padding:13px;border:1px solid #ccd2dd;border-radius:10px;margin:8px 0 12px}button{width:100%;border:0;border-radius:10px;padding:13px;background:#3157d5;color:white;font-weight:800;cursor:pointer}.result{display:none;margin-top:24px;padding:20px;border-radius:12px;background:#f7f9fc;border:1px solid #e1e6ef}.result.visible{display:block}.row{display:flex;justify-content:space-between;gap:12px;padding:7px 0}.row span{color:#667085}.error{color:#b42318;background:#fff1f0}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo">DEMO EXPRESS</div>
+    <h1>Track your shipment</h1>
+    <p class="muted">Local deterministic carrier simulator.</p>
+    <form id="trackingForm">
+      <label for="trackingNumber">Tracking Number</label>
+      <input id="trackingNumber" autocomplete="off" placeholder="VN000001" />
+      <button id="trackButton" type="submit">Track Shipment</button>
+    </form>
+    <section id="trackingResult" class="result" data-found="false" aria-live="polite">
+      <div id="successContent">
+        <div class="row"><span>Tracking</span><strong id="resultTracking"></strong></div>
+        <div class="row"><span>Status</span><strong id="resultStatus"></strong></div>
+        <div class="row"><span>Location</span><strong id="resultLocation"></strong></div>
+        <div class="row"><span>Updated</span><time id="resultUpdated"></time></div>
+      </div>
+      <strong id="errorMessage"></strong>
+    </section>
+  </main>
+  <script>
+    const shipments = {
+      VN000001:{status:"In Transit",location:"Da Nang",updated:"2026-09-18T07:30:00Z"},
+      VN000002:{status:"Delivered",location:"Ho Chi Minh City",updated:"2026-09-18T04:15:00Z"},
+      VN000003:{status:"Out for Delivery",location:"Hanoi",updated:"2026-09-18T08:45:00Z"}
+    };
+    document.querySelector("#trackingForm").addEventListener("submit",(event)=>{
+      event.preventDefault();
+      const number=document.querySelector("#trackingNumber").value.trim().toUpperCase();
+      const data=shipments[number];
+      const result=document.querySelector("#trackingResult");
+      result.classList.add("visible");
+      result.dataset.found=String(Boolean(data));
+      document.querySelector("#successContent").style.display=data?"block":"none";
+      document.querySelector("#errorMessage").textContent=data?"":"Tracking number not found";
+      result.classList.toggle("error",!data);
+      if(data){document.querySelector("#resultTracking").textContent=number;document.querySelector("#resultStatus").textContent=data.status;document.querySelector("#resultLocation").textContent=data.location;const updated=document.querySelector("#resultUpdated");updated.dateTime=data.updated;updated.textContent=new Date(data.updated).toLocaleString();}
+    });
+  </script>
+</body>
+</html>
