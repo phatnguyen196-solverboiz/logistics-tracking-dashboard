@@ -33,6 +33,7 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
       MOCK_CARRIER_URL: http://mock-carrier
       CHROME_BINARY: /usr/bin/chromium
+      CHROMEDRIVER_PATH: /usr/bin/chromedriver
     ports:
       - "8000:8000"
     depends_on:
@@ -40,6 +41,11 @@ services:
         condition: service_healthy
       mock-carrier:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health/').read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   frontend:
     build:
@@ -49,7 +55,8 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone as dt_timezone
 
 import pytest
+from django.db import IntegrityError
 
 from automation.carrier_base import TrackingResult
 from automation.exceptions import CarrierUnavailableError, TrackingNotFoundError
@@ -71,3 +72,11 @@ def test_repeated_identical_result_does_not_duplicate_history() -> None:
     service.track_shipment(shipment)
     service.track_shipment(shipment)
     assert TrackingEvent.objects.filter(shipment=shipment).count() == 1
+
+
+@pytest.mark.django_db
+def test_database_rejects_two_running_jobs_for_one_shipment() -> None:
+    shipment = Shipment.objects.create(tracking_number="VN000103")
+    AutomationJob.objects.create(shipment=shipment, status=AutomationJob.Status.RUNNING)
+    with pytest.raises(IntegrityError):
+        AutomationJob.objects.create(shipment=shipment, status=AutomationJob.Status.RUNNING)

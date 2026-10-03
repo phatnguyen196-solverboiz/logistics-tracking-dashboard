@@ -15,7 +15,7 @@
     <p class="muted">Local deterministic carrier simulator.</p>
     <form id="trackingForm">
       <label for="trackingNumber">Tracking Number</label>
-      <input id="trackingNumber" autocomplete="off" placeholder="VN000001" />
+      <input id="trackingNumber" autocomplete="off" placeholder="VN000001" required minlength="6" maxlength="40" pattern="[A-Za-z0-9-]{6,40}" title="Use 6–40 letters, numbers, or hyphens." />
       <button id="trackButton" type="submit">Track Shipment</button>
     </form>
     <section id="trackingResult" class="result" data-found="false" aria-live="polite">
@@ -37,7 +37,7 @@
     document.querySelector("#trackingForm").addEventListener("submit",(event)=>{
       event.preventDefault();
       const number=document.querySelector("#trackingNumber").value.trim().toUpperCase();
-      const data=shipments[number];
+      const data=Object.prototype.hasOwnProperty.call(shipments,number)?shipments[number]:undefined;
       const result=document.querySelector("#trackingResult");
       result.classList.add("visible");
       result.dataset.found=String(Boolean(data));

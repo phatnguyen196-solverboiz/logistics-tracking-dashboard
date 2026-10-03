@@ -1,6 +1,8 @@
 # RoutePulse — Logistics Tracking Automation Dashboard
 
-RoutePulse is a portfolio-grade logistics application that stores shipments, launches resilient browser automation jobs, records tracking history, and presents operations data in a responsive dashboard. It demonstrates a practical separation between HTTP views, business services, Selenium adapters, and persistence.
+RoutePulse is a demo logistics application that stores shipments, runs browser-based tracking, records tracking history, and presents operations data in a responsive dashboard. It demonstrates a practical separation between HTTP views, business services, Selenium adapters, and persistence.
+
+> **Demo and security note:** the API currently has no user authentication. Anyone who can reach it can view, create, and track shipments. Keep it on a trusted local or private network; do not expose it publicly or store real customer data until authentication and authorization are added.
 
 ## Business problem
 
@@ -17,7 +19,7 @@ flowchart LR
   SEL --> MOCK[Demo Express site]
 ```
 
-The Django views remain thin. `TrackingService` owns retries, transactions, job state, and event creation. `CarrierTracker` defines the carrier interface; `DemoExpressTracker` is the Selenium implementation.
+The Django views remain thin. `TrackingService` owns retries, transactions, job state, and event creation. `CarrierTracker` defines the carrier interface; `DemoExpressTracker` is the Selenium implementation. Tracking currently runs synchronously in the API request, so the request waits for Selenium and its retries to finish.
 
 ## Stack
 
@@ -82,6 +84,8 @@ Serve `mock-carrier/` on port 8081 (for example with Nginx or `python -m http.se
 
 Never commit production secrets. `.env` is ignored; `.env.example` contains only safe placeholders.
 
+When setting `DJANGO_DEBUG=false`, configure a private `DJANGO_SECRET_KEY`, explicit `ALLOWED_HOSTS`, a persistent `DATABASE_URL`, and `CORS_ALLOWED_ORIGINS`. Django settings now stop startup when these production values are missing or unsafe. This does not add API authentication; keep the API on a private network.
+
 ## REST API
 
 | Method | Endpoint | Description |
@@ -112,7 +116,7 @@ cd backend && pytest
 cd ../frontend && npm run lint && npm run build
 ```
 
-The tests cover creation, duplicate validation, listing, retrieval, API validation, successful and failed jobs, event creation, retries, and job retrieval. Selenium is replaced with deterministic test doubles in unit tests.
+The tests cover creation, duplicate validation, listing, retrieval, API validation, successful and failed jobs, event creation, retries, and job retrieval. A database constraint prevents two simultaneous tracking jobs for one shipment, with a `409` response for the losing request. Selenium is replaced with deterministic test doubles in unit tests.
 
 ## Screenshots
 

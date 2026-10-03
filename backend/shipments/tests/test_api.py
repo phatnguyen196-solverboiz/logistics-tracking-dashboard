@@ -1,6 +1,7 @@
 from datetime import datetime, timezone as dt_timezone
 
 import pytest
+from django.db import IntegrityError
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -96,6 +97,17 @@ def test_track_rejects_duplicate_running_job(api_client: APIClient, shipment: Sh
         shipment=shipment,
         status=AutomationJob.Status.RUNNING,
     )
+    response = api_client.post(reverse("shipment-track", args=[shipment.pk]))
+    assert response.status_code == 409
+    assert "already running" in response.data["detail"]
+
+
+@pytest.mark.django_db
+def test_track_handles_concurrent_running_job_conflict(api_client: APIClient, shipment: Shipment, monkeypatch) -> None:
+    def raise_conflict():
+        raise IntegrityError("one_running_job_per_ship")
+
+    monkeypatch.setattr("shipments.views.TrackingService", raise_conflict)
     response = api_client.post(reverse("shipment-track", args=[shipment.pk]))
     assert response.status_code == 409
     assert "already running" in response.data["detail"]

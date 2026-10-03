@@ -35,12 +35,15 @@ export default function ShipmentDetailPage() {
     finally { setTracking(false); }
   }
 
-  if (!shipment) return <div className="empty">{error || "Loading shipment…"}</div>;
+  if (!shipment) return <>
+    <Link className="back-link" href="/">← Back to dashboard</Link>
+    {error ? <div className="alert error" role="alert">{error}</div> : <div className="empty">Loading shipment…</div>}
+  </>;
 
   return (
     <>
       <Link className="back-link" href="/">← Back to dashboard</Link>
-      {error && <div className="alert error">{error}</div>}
+      {error && <div className="alert error" role="alert">{error}</div>}
       <section className="detail-hero">
         <div><p className="eyebrow">Demo Express</p><h1>{shipment.tracking_number}</h1><StatusBadge status={shipment.current_status} /></div>
         <button className="button" onClick={() => void track()} disabled={tracking}>{tracking ? "Tracking…" : "Run tracking"}</button>
