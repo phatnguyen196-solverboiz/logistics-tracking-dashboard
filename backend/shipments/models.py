@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 
 class Shipment(models.Model):
@@ -46,3 +47,10 @@ class AutomationJob(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["shipment"],
+                condition=Q(status="RUNNING"),
+                name="one_running_job_per_ship",
+            )
+        ]

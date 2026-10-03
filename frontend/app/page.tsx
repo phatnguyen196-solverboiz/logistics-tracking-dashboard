@@ -12,7 +12,7 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [trackingId, setTrackingId] = useState<number | null>(null);
+  const [trackingIds, setTrackingIds] = useState<Set<number>>(() => new Set());
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
 
   const load = useCallback(async (background = false) => {
@@ -35,12 +35,12 @@ export default function Dashboard() {
   const stats = useMemo(() => ({
     total: shipments.length,
     transit: shipments.filter((item) => item.current_status === "In Transit").length,
+    outForDelivery: shipments.filter((item) => item.current_status === "Out for Delivery").length,
     delivered: shipments.filter((item) => item.current_status === "Delivered").length,
-    failed: shipments.filter((item) => item.current_status === "Failed").length,
   }), [shipments]);
 
   async function track(shipment: Shipment) {
-    setTrackingId(shipment.id);
+    setTrackingIds((current) => new Set(current).add(shipment.id));
     setError("");
     try {
       await api.trackShipment(shipment.id);
@@ -48,7 +48,11 @@ export default function Dashboard() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Tracking failed");
     } finally {
-      setTrackingId(null);
+      setTrackingIds((current) => {
+        const next = new Set(current);
+        next.delete(shipment.id);
+        return next;
+      });
     }
   }
 
@@ -61,7 +65,7 @@ export default function Dashboard() {
           <p className="subtle">Track every handoff from one calm, reliable workspace.</p>
         </div>
         <div className="hero-tools">
-          <button className="secondary" disabled={refreshing} onClick={() => void load(true)}>{refreshing ? "Refreshing…" : "Refresh data"}</button>
+          <button className="secondary" disabled={loading || refreshing} onClick={() => void load(true)}>{refreshing ? "Refreshing…" : "Refresh data"}</button>
           {lastRefreshedAt && <span className="freshness" aria-live="polite"><span className="dot dot--go" />Updated {lastRefreshedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
         </div>
       </section>
@@ -70,10 +74,10 @@ export default function Dashboard() {
         <StatCard label="Total shipments" value={stats.total} tone="blue" />
         <StatCard label="In transit" value={stats.transit} tone="amber" />
         <StatCard label="Delivered" value={stats.delivered} tone="green" />
-        <StatCard label="Failed" value={stats.failed} tone="red" />
+        <StatCard label="Out for delivery" value={stats.outForDelivery} tone="amber" />
       </section>
 
-      {error && <div className="alert error">{error}</div>}
+      {error && <div className="alert error" role="alert">{error}</div>}
       <section className="panel">
         <div className="panel-heading">
           <div><h2>Active shipments</h2><p>Latest carrier status and location</p></div>
@@ -92,7 +96,7 @@ export default function Dashboard() {
                   <td><StatusBadge status={shipment.current_status} /></td>
                   <td>{shipment.current_location || "—"}</td>
                   <td>{new Date(shipment.updated_at).toLocaleString()}</td>
-                  <td className="actions"><button disabled={trackingId === shipment.id} onClick={() => void track(shipment)}>{trackingId === shipment.id ? "Tracking…" : "Track"}</button><Link href={`/shipments/${shipment.id}`}>Details</Link></td>
+                  <td className="actions"><button disabled={trackingIds.has(shipment.id)} onClick={() => void track(shipment)}>{trackingIds.has(shipment.id) ? "Tracking…" : "Track"}</button><Link href={`/shipments/${shipment.id}`}>Details</Link></td>
                 </tr>
               ))}</tbody>
             </table>

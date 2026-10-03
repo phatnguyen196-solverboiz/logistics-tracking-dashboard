@@ -2,13 +2,23 @@ from pathlib import Path
 import os
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "development-only-change-me")
-DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true"
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,backend").split(",")]
+DEVELOPMENT_SECRET_KEY = "development-only-change-me"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", DEVELOPMENT_SECRET_KEY)
+DEBUG = os.getenv("DJANGO_DEBUG", "true").strip().lower() in {"1", "true", "yes", "on"}
+ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,backend").split(",") if host.strip()]
+
+if not DEBUG:
+    if not SECRET_KEY or SECRET_KEY == DEVELOPMENT_SECRET_KEY:
+        raise ImproperlyConfigured("Set DJANGO_SECRET_KEY to a private value when DJANGO_DEBUG=false.")
+    if not os.getenv("ALLOWED_HOSTS") or not ALLOWED_HOSTS or "*" in ALLOWED_HOSTS:
+        raise ImproperlyConfigured("Set explicit ALLOWED_HOSTS when DJANGO_DEBUG=false.")
+    if not os.getenv("DATABASE_URL"):
+        raise ImproperlyConfigured("Set DATABASE_URL to a persistent database when DJANGO_DEBUG=false.")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -72,6 +82,9 @@ CORS_ALLOWED_ORIGINS = [
     ).split(",")
     if origin.strip()
 ]
+
+if not DEBUG and not CORS_ALLOWED_ORIGINS:
+    raise ImproperlyConfigured("Set CORS_ALLOWED_ORIGINS when DJANGO_DEBUG=false.")
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],

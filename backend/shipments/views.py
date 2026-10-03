@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -20,7 +21,15 @@ class ShipmentViewSet(viewsets.ModelViewSet):
                 {"detail": "Tracking is already running for this shipment."},
                 status=status.HTTP_409_CONFLICT,
             )
-        job = TrackingService().track_shipment(shipment)
+        try:
+            job = TrackingService().track_shipment(shipment)
+        except IntegrityError:
+            # The partial unique constraint is the final guard when two requests
+            # pass the read check at the same time.
+            return Response(
+                {"detail": "Tracking is already running for this shipment."},
+                status=status.HTTP_409_CONFLICT,
+            )
         response_status = status.HTTP_200_OK if job.status == AutomationJob.Status.SUCCESS else status.HTTP_502_BAD_GATEWAY
         return Response(AutomationJobSerializer(job).data, status=response_status)
 

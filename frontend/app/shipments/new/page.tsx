@@ -32,9 +32,9 @@ export default function AddShipmentPage() {
         <p className="eyebrow">New shipment</p>
         <h1>Add a tracking number</h1>
         <p className="subtle">Demo Express supports VN000001, VN000002, and VN000003.</p>
-        {error && <div className="alert error">{error}</div>}
+        {error && <div className="alert error" role="alert">{error}</div>}
         <form onSubmit={submit}>
-          <label>Tracking number<input required minLength={6} value={trackingNumber} onChange={(event) => setTrackingNumber(event.target.value.toUpperCase())} placeholder="VN000001" /></label>
+          <label>Tracking number<input required minLength={6} maxLength={40} pattern="[A-Za-z0-9-]{6,40}" title="Use 6–40 letters, numbers, or hyphens." value={trackingNumber} onChange={(event) => setTrackingNumber(event.target.value.toUpperCase())} placeholder="VN000001" /></label>
           <label>Carrier<select value="DEMO_EXPRESS" disabled><option value="DEMO_EXPRESS">Demo Express</option></select></label>
           <button className="button full" disabled={saving}>{saving ? "Saving…" : "Create shipment"}</button>
         </form>
