@@ -45,6 +45,21 @@ Open:
 
 Create a shipment with `VN000001`, `VN000002`, or `VN000003`, then select **Track**.
 
+## Deploy to Render (one click)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/phatnguyen196-solverboiz/logistics-tracking-dashboard)
+
+Or: Render dashboard → **New → Blueprint** → select this repository → **Apply**. No environment variables need to be entered.
+
+[`render.yaml`](render.yaml) creates a free PostgreSQL database and one Docker web service built from [`Dockerfile.render`](Dockerfile.render):
+
+- Next.js is the only public process. The browser calls same-origin `/api/*`, which [`frontend/app/api/[...path]/route.ts`](frontend/app/api/%5B...path%5D/route.ts) forwards to Django.
+- Django + gunicorn listen on `127.0.0.1:8000` inside the container (not reachable from the internet; `/admin` is not exposed).
+- Selenium opens the Demo Express page from disk (`file:///srv/mock-carrier/index.html`), so no extra service is needed.
+- `DJANGO_SECRET_KEY` is generated and `DATABASE_URL` is wired by Render.
+
+Free-plan notes: the service sleeps after ~15 minutes idle (first request takes ~1 minute), RAM is limited (one tracking run at a time is safest), and free databases expire after a limited period. The API still has no authentication — use demo data only.
+
 ## Local development
 
 Backend:
